@@ -41,7 +41,7 @@ except Exception as e:
   stop_words = {'the', 'on'}
 
 try:
-  from nltk.tokenize import word_tokenize
+  from nltk.tokenize import word_tokenize, sent_tokenize
   
   # transform term into token
   def term_from_token(token, on_each_term):
@@ -80,8 +80,9 @@ def terms_from_tokens(tokens, on_each_term):
 # get terms from content
 # operations are sentence tokenizing, word tokenizing, case folding then stem
 def terms_from_content(content, on_each_term):
-  tokens = word_tokenize(content)
-  terms = terms_from_tokens(tokens, on_each_term)
+  for sent in sent_tokenize(content):
+    tokens = word_tokenize(sent)
+    terms = terms_from_tokens(tokens, on_each_term)
 
 # writes postings lists to file
 def write_posting_lists(filename, indexer):
