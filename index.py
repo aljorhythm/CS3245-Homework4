@@ -5,6 +5,7 @@ import argparse
 import os
 import csv
 import sys
+import nltk
 
 from itertools import chain
 from posting_list import PostingList
@@ -21,24 +22,44 @@ csv.field_size_limit(sys.maxsize)
 
 try:
   from nltk.stem import PorterStemmer
-  from nltk.tokenize import sent_tokenize, word_tokenize
   ps = PorterStemmer()
+  def stem(x):
+    ps.stem(x)
+except:
+  print("error importing porter stemmer")
+  def stem(x):
+    return x
+
+try:
+  from nltk.corpus import stopwords
+
+  nltk.download('stopwords', quiet=True)
+  stopwords = dict.fromkeys(stopwords.words('english'), True)
+except Exception as e:
+  print ("error", e)
+  stop_words = {'the', 'on'}
+
+try:
+  from nltk.tokenize import word_tokenize
+  
   # transform term into token
   def term_from_token(token, on_each_term):
     after = ps.stem(token.lower())
     on_each_term(after)
-except:
+except Exception as e:
+  print("error", e)
+
   # transform term into token
   def term_from_token(token, on_each_term):
-    on_each_term(after)
+    on_each_term(token)
 
   # sent_tokenize
   def sent_tokenize(sentences):
     return sentences.split(".")
 
   # word_tokenize
-  def word_tokenize(sentence):
-    return sentence.split(" ")
+  def word_tokenize(content):
+    return reduce(lambda accum, sent: accum.append(sent.split(" ")), sent_tokenize(content))
 
 # Term that will return all documents
 global_term = ''
@@ -59,9 +80,8 @@ def terms_from_tokens(tokens, on_each_term):
 # operations are sentence tokenizing, word tokenizing, case folding then stem
 # encode with utf-8
 def terms_from_content(content, on_each_term):
-  for sentence in sent_tokenize(content):
-    for tokens in word_tokenize(sentence):
-      terms = terms_from_tokens(tokens, on_each_term)
+  for tokens in word_tokenize(content):
+    terms = terms_from_tokens(tokens, on_each_term)
 
 # writes postings lists to file
 def write_posting_lists(filename, indexer):
@@ -146,6 +166,11 @@ class Indexer():
         content = row[2].decode('utf-8')
 
         def on_each_term(term):
+          term = term.encode('utf-8')
+
+          if term in stopwords:
+            return
+
           documents[document_id] = {}
 
           # increment term posting list
