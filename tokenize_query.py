@@ -1,3 +1,5 @@
+# Tokenize query
+# Eg. "swimming pool" and teacher
 
 def tokenize_query(query_string):
   query_string.strip(' ')
@@ -20,6 +22,10 @@ def tokenize_query(query_string):
           break
         query_phrase += character
         index += 1
+
+    if index == 0:
+      character = ' '
+      index = -1
 
     if character == ' ':
       index += 1
@@ -54,3 +60,6 @@ if __name__ == "__main__":
 
   phrases = tokenize_query('"hi" and "hi2"')
   assert phrases == ['hi', 'and', 'hi2'], phrases
+  
+  phrases = tokenize_query('quiet phone call')
+  assert phrases == ['quiet', 'phone', 'call'], phrases
