@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # indexing script
 
 import math
@@ -78,10 +79,9 @@ def terms_from_tokens(tokens, on_each_term):
 
 # get terms from content
 # operations are sentence tokenizing, word tokenizing, case folding then stem
-# encode with utf-8
 def terms_from_content(content, on_each_term):
-  for tokens in word_tokenize(content):
-    terms = terms_from_tokens(tokens, on_each_term)
+  tokens = word_tokenize(content)
+  terms = terms_from_tokens(tokens, on_each_term)
 
 # writes postings lists to file
 def write_posting_lists(filename, indexer):
@@ -166,8 +166,6 @@ class Indexer():
         content = row[2].decode('utf-8')
 
         def on_each_term(term):
-          term = term.encode('utf-8')
-
           if term in stopwords:
             return
 
