@@ -13,11 +13,12 @@ from index import square_root_of_summation_of_squares
 # Represents a query, its operations and results
 class Query():
   # terms are dictionary of term and term information from dictionary file
-  def __init__(self, query, terms, file_reader, query_terminizer, document_ids_to_index):
+  def __init__(self, query, terms, file_reader, query_to_phrases, phrase_terminizer, document_ids_to_index):
     self.query = query
     self.terms = terms
     self.file_reader = file_reader
-    self.query_terminizer = query_terminizer
+    self.phrase_terminizer = phrase_terminizer
+    self.query_to_phrases = query_to_phrases
     self.document_ids_to_index = document_ids_to_index
     self.document_index_to_id = dict((v, k) for k, v in document_ids_to_index.iteritems())
     self.document_ids = document_ids_to_index.keys()
@@ -74,11 +75,11 @@ class Query():
 
   # execute query
   def executeQuery(self):
-    query_phrases = self.query_terminizer(self.query)
+    query_phrases = self.query_to_phrases(self.query)
     query_phrases_document_scores = []
 
     for query_phrase in query_phrases:
-      if query_phrase == "and":
+      if query_phrase.lower() == "and":
         continue
       document_scores = self.executeQueryPhrase(query_phrase)
       query_phrases_document_scores.append(document_scores)
@@ -104,7 +105,7 @@ class Query():
 
   # execute query for phrase
   def executeQueryPhrase(self, phrase):
-    query_terms = phrase.split(" ")
+    query_terms = self.phrase_terminizer(phrase)
     number_of_documents = self.number_of_documents
 
     # dummy document id for query posting list

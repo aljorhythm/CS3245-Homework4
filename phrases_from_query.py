@@ -1,7 +1,7 @@
 # Tokenize query
 # Eg. "swimming pool" and teacher
 
-def tokenize_query(query_string):
+def phrases_from_query(query_string):
   query_string.strip(' ')
   index = 0
   query_phrases = []
@@ -49,17 +49,17 @@ def tokenize_query(query_string):
   return query_phrases
       
 if __name__ == "__main__":
-  phrases = tokenize_query('"something like" and hi')
+  phrases = phrases_from_query('"something like" and hi')
   assert phrases == ['something like', 'and', 'hi'], phrases
 
-  phrases = tokenize_query('"something like" and "hi"')
+  phrases = phrases_from_query('"something like" and "hi"')
   assert phrases == ['something like', 'and', 'hi'], phrases
 
-  phrases = tokenize_query('"hi"')
+  phrases = phrases_from_query('"hi"')
   assert phrases == ['hi'], phrases
 
-  phrases = tokenize_query('"hi" and "hi2"')
+  phrases = phrases_from_query('"hi" and "hi2"')
   assert phrases == ['hi', 'and', 'hi2'], phrases
   
-  phrases = tokenize_query('quiet phone call')
+  phrases = phrases_from_query('quiet phone call')
   assert phrases == ['quiet', 'phone', 'call'], phrases

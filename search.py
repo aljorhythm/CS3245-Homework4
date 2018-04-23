@@ -2,7 +2,8 @@ import os
 import argparse
 import time
 from index import read_dictionary
-from tokenize_query import tokenize_query
+from index import terms_from_content as terms_from_content_callback
+from phrases_from_query import phrases_from_query
 from file_reader import FileReader
 from query import Query
 import struct
@@ -19,8 +20,8 @@ def read_query_file(filename):
     return (lines[0], lines[1:])
 
 # returns search results of query (top 10)
-def search(query_string, dictionary, posting_file_reader, term_from_token, number_of_documents):
-  query = Query(query_string, dictionary, posting_file_reader, term_from_token, number_of_documents)
+def search(query_string, dictionary, posting_file_reader, query_to_phrases, terms_from_content, number_of_documents):
+  query = Query(query_string, dictionary, posting_file_reader, query_to_phrases, terms_from_content, number_of_documents)
   results = query.getRankedDocumentScores()
   return results
 
@@ -58,7 +59,13 @@ if __name__ == "__main__":
 
   search_results = []
   query = query.strip('\n')
-  search_result = search(query, terms, posting_file_reader, tokenize_query, document_ids_to_index)
+
+  def terms_from_content(content):
+    terms = []
+    terms_from_content_callback(content, lambda term: terms.append(term))
+    return terms
+
+  search_result = search(query, terms, posting_file_reader, phrases_from_query, terms_from_content, document_ids_to_index)
   search_results.append(search_result)
 
   done = time.time()

@@ -5,8 +5,9 @@ import math
 # returns inverse document frequency: log (N / df_t)
 def inverse_document_frequency(number_of_documents, document_frequency):
   try:
-    return math.log(number_of_documents / document_frequency, 10)
+    return math.log(float(number_of_documents) / document_frequency, 10)
   except:
+    print "except"
     return 0
 
 # A single posting list
