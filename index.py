@@ -152,7 +152,6 @@ class Indexer():
 
       row_number = 1
       for row in csvreader:
-        print row_number
 
         # heading
         if row_number == 1:

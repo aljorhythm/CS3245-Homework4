@@ -36,11 +36,15 @@ def phrases_from_query(query_string):
           break
 
         character = query_string[index]
-        
+
+        if character == ' ' and query_phrase == 'and':
+          query_phrases.append(query_phrase)
+          break
+
         if character == '"':
           break
 
-        if character == ' ':
+        if character == ' ' and index + 1 < len(query_string) and query_string[index + 1] == '"':
           query_phrases.append(query_phrase)
           break
         query_phrase += character
@@ -62,4 +66,4 @@ if __name__ == "__main__":
   assert phrases == ['hi', 'and', 'hi2'], phrases
   
   phrases = phrases_from_query('quiet phone call')
-  assert phrases == ['quiet', 'phone', 'call'], phrases
+  assert phrases == ['quiet phone call'], phrases

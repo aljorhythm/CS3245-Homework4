@@ -9,12 +9,13 @@ from posting_list import PostingList
 from term_weight import TermWeight
 from posting_list import inverse_document_frequency as calculate_idf
 from index import square_root_of_summation_of_squares
+from query_expansions import get_query_expansion, add_query_expansion
 
 # Represents a query, its operations and results
 class Query():
   # terms are dictionary of term and term information from dictionary file
   def __init__(self, query, terms, file_reader, query_to_phrases, phrase_terminizer, document_ids_to_index):
-    self.query = query
+    self.query = query.strip()
     self.terms = terms
     self.file_reader = file_reader
     self.phrase_terminizer = phrase_terminizer
@@ -62,20 +63,19 @@ class Query():
   # returns ranked documents with scores
   # 0 score documents are not included
   def getRankedDocumentScores(self, limit=None):
-    if limit == None or limit > self.number_of_documents:
+    if limit == None or limit >= len(self.results):
       limit = len(self.results)
-    print self.results
     document_ids = sorted(self.results.keys())
     scores = [self.results[document_id] for document_id in document_ids]
     top_indices = np.argpartition(scores, -limit)[-limit:]
     ranked = [{"document_id" : document_ids[top_index], "score": scores[top_index]} for top_index in reversed(top_indices)]
     ranked = filter(lambda document_score: document_score["score"] > 0, ranked)
-    print ranked
     return ranked
 
   # execute query
   def executeQuery(self):
     query_phrases = self.query_to_phrases(self.query)
+    query_phrases = self.expandQuery(query_phrases)
     query_phrases_document_scores = []
 
     for query_phrase in query_phrases:
@@ -102,6 +102,8 @@ class Query():
         document_scores[document_id] += additional_weight + phrase_document_score
 
     self.results = document_scores
+
+    self.recordQueryExpansion(query_phrases)
 
   # execute query for phrase
   def executeQueryPhrase(self, phrase):
@@ -163,6 +165,43 @@ class Query():
       document_scores[document_id] = cosine_similarity
     
     return document_scores
+
+  # expand query using recorded query expansion
+  def expandQuery(self, query_phrases):
+    expansion = get_query_expansion(query_phrases)
+    if expansion == None:
+      return query_phrases
+    else:
+      return expansion
+
+  # record query expansion using top term in top 10 documents in results
+  def recordQueryExpansion(self, query_phrases, top=10):
+    ranked_document_scores = self.getRankedDocumentScores(top)
+    top_ids = [score["document_id"] for score in ranked_document_scores]
+    top_ids_to_index = { int(id): index for index, id in enumerate(top_ids) }
+
+    # create document vectors
+    document_vectors = np.zeros((len(top_ids), len(self.terms)))
+    term_index_to_term = {}
+
+    # create document vectors
+    for term_index, term in enumerate(self.terms):
+      term_index_to_term[term_index] = term
+      term_weights = self.getTermWeights(term)
+      for document_id, term_weight in term_weights.items():
+        if document_id in top_ids_to_index:
+          document_index = top_ids_to_index[document_id]
+          document_vectors[document_index][term_index] = term_weights[document_id].getWeight()
+    
+    term_counts = document_vectors.sum(axis=0)
+    sorted_term_indexes = np.argsort(-term_counts)
+    
+    # add top term to query
+    for term_index in sorted_term_indexes:   
+      term = term_index_to_term[term_index]
+      if term.isalnum() and len(term) > 4 and term not in query_phrases:
+        add_query_expansion(query_phrases, term)
+        return
 
 if __name__ == "__main__":
   from index import term_from_token
